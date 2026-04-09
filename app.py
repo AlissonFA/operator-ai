@@ -114,6 +114,90 @@ def get():
                 flex-direction: column;
                 gap: 15px;
             }
+            .control-group {
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+            }
+            .control-label {
+                font-size: 0.8rem;
+                font-weight: 600;
+                color: var(--primary);
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+            }
+            .checkbox-group {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 15px;
+                cursor: pointer;
+                user-select: none;
+                padding: 12px 18px;
+                background: rgba(255, 255, 255, 0.05);
+                border: 1px solid var(--glass-border) !important;
+                border-radius: 16px;
+                transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+                width: 100%;
+                box-sizing: border-box;
+            }
+            .checkbox-group:hover {
+                background: rgba(255, 255, 255, 0.08);
+                border-color: rgba(255, 255, 255, 0.2) !important;
+            }
+            /* Switch Container */
+            .switch {
+                position: relative;
+                display: block !important;
+                width: 50px !important;
+                height: 26px !important;
+                min-width: 50px !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                border: none !important;
+                background: none !important;
+                cursor: pointer;
+            }
+            .switch input { 
+                opacity: 0 !important;
+                width: 0 !important;
+                height: 0 !important;
+                position: absolute !important;
+            }
+            /* The track */
+            .slider-toggle {
+                position: absolute;
+                cursor: pointer;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background-color: #334155;
+                transition: .3s;
+                border-radius: 34px;
+                border: none !important;
+            }
+            /* The thumb */
+            .slider-toggle:before {
+                position: absolute;
+                content: "";
+                height: 20px !important;
+                width: 20px !important;
+                left: 3px !important;
+                top: 3px !important;
+                background-color: white !important;
+                transition: .3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+                border-radius: 50%;
+                box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+                z-index: 2;
+            }
+            input:checked + .slider-toggle {
+                background: linear-gradient(135deg, var(--primary), var(--secondary)) !important;
+                box-shadow: 0 0 15px rgba(88, 166, 255, 0.3);
+            }
+            input:checked + .slider-toggle:before {
+                transform: translateX(24px) !important;
+            }
             #status-text { margin: 0; font-size: 0.8rem; opacity: 0.7; text-align: center; }
         """),
         H1("NLW Operator AI"),
@@ -125,10 +209,31 @@ def get():
             ),
             Div(
                 Div(
-                    Select(
-                        Option("Object Detection", value="Object Detection", selected=True),
-                        Option("Gesture Recognition", value="Gesture Recognition"),
-                        id="mode-select", onchange="updateState()"
+                    Div(
+                        Label("Modo de Operação", _for="mode-select", cls="control-label"),
+                        Select(
+                            Option("Object Detection", value="Object Detection", selected=True),
+                            Option("Gesture Recognition", value="Gesture Recognition"),
+                            id="mode-select", onchange="updateState()"
+                        ),
+                        cls="control-group"
+                    ),
+                    Div(
+                        Label("Qualidade da Imagem", _for="quality-slider", cls="control-label"),
+                        Input(type="range", id="quality-slider", min="10", max="100", value="70"),
+                        cls="control-group"
+                    ),
+                    Div(
+                        Div(
+                            Span("Mostrar Landmarks", cls="control-label", style="margin:0"),
+                            Label(
+                                Input(type="checkbox", id="landmarks-checkbox", checked="checked"),
+                                Span(cls="slider-toggle"),
+                                cls="switch"
+                            ),
+                            cls="checkbox-group"
+                        ),
+                        cls="control-group"
                     ),
                     P(id="status-text"),
                     cls="controls glass-panel"
@@ -147,6 +252,8 @@ async def ws(ws):
     # Removendo o accept() manual para evitar erro de protocolo ASGI.
     
     conn_mode = "Object Detection"
+    quality = 70
+    show_landmarks = True
 
     while True:
         try:
@@ -156,6 +263,8 @@ async def ws(ws):
                 config = json.loads(msg['text'])
                 if config.get('type') == 'config':
                     conn_mode = config.get('mode', conn_mode)
+                    quality = config.get('quality', quality)
+                    show_landmarks = config.get('show_landmarks', show_landmarks)
                 continue
 
             if 'bytes' in msg:
@@ -176,7 +285,7 @@ async def ws(ws):
                 elif conn_mode == "Gesture Recognition":
                     img = cv2.flip(img, 1)
                     if recognizer: 
-                        img, labels, images_to_show = processor.process_gesture_recognition(img)
+                        img, labels, images_to_show = processor.process_gesture_recognition(img, show_landmarks=show_landmarks)
                     else:
                         labels = ["Reconhecedor não carregado"]
                 
@@ -188,7 +297,7 @@ async def ws(ws):
                 await ws.send_json(payload)
                 
                 # Envia os bytes da imagem processada
-                _, buffer = cv2.imencode('.jpg', img, [cv2.IMWRITE_JPEG_QUALITY, 70])
+                _, buffer = cv2.imencode('.jpg', img, [cv2.IMWRITE_JPEG_QUALITY, quality])
                 await ws.send_bytes(buffer.tobytes())
 
         except Exception as e:

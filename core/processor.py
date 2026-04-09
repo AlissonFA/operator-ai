@@ -23,7 +23,7 @@ class FrameProcessor:
         frame = self.visualizer.draw_objects(frame, results)
         return frame, detections
 
-    def process_gesture_recognition(self, frame):
+    def process_gesture_recognition(self, frame, show_landmarks=True):
         """Executa o rastreamento de mãos e a classificação de gestos customizados."""
         rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         results = self.recognizer.recognize(rgb_frame)
@@ -34,8 +34,9 @@ class FrameProcessor:
         # Se houver mãos detectadas
         if results.hand_landmarks:
             for i, landmarks in enumerate(results.hand_landmarks):
-                # Desenha os pontos e esqueletos das mãos
-                self.visualizer.draw_hand_landmarks(frame, landmarks)
+                # Desenha os pontos e esqueletos das mãos se habilitado
+                if show_landmarks:
+                    self.visualizer.draw_hand_landmarks(frame, landmarks)
                 
                 # Se houver um classificador treinado, identifica o gesto
                 if self.classifier:

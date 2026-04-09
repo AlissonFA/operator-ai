@@ -3,6 +3,8 @@ let video = document.getElementById('video');
 let canvas = document.getElementById('output-canvas');
 let ctx = canvas.getContext('2d');
 let modeSelect = document.getElementById('mode-select');
+let qualitySlider = document.getElementById('quality-slider');
+let landmarksCheckbox = document.getElementById('landmarks-checkbox');
 let lastFrameTime = 0;
 
 async function setupWebcam() {
@@ -17,7 +19,9 @@ function updateState() {
     if (ws && ws.readyState === WebSocket.OPEN) {
         ws.send(JSON.stringify({
             type: 'config',
-            mode: modeSelect.value
+            mode: modeSelect.value,
+            quality: parseInt(qualitySlider.value),
+            show_landmarks: landmarksCheckbox.checked
         }));
     }
 }
@@ -133,5 +137,8 @@ function sendFrame(time) {
         requestAnimationFrame(sendFrame);
     }
 }
+
+if (qualitySlider) qualitySlider.addEventListener('input', updateState);
+if (landmarksCheckbox) landmarksCheckbox.addEventListener('change', updateState);
 
 setupWebcam().then(connectWS);

@@ -29,6 +29,9 @@ class FrameProcessor:
         results = self.recognizer.recognize(rgb_frame)
         
         legends = []
+        image_to_show = None
+        gestures = []
+        
         # Se houver mãos detectadas
         if results.hand_landmarks:
             for i, landmarks in enumerate(results.hand_landmarks):
@@ -38,10 +41,15 @@ class FrameProcessor:
                 # Se houver um classificador treinado, identifica o gesto
                 if self.classifier:
                     gesture_name = self.classifier.predict(landmarks)
+                    gestures.append(gesture_name)
                     
                     # Identifica se a mão é Esquerda ou Direita
                     hand_info = results.handedness[i][0]
                     side = "Right" if hand_info.category_name == "Left" else "Left"
                     legends.append(f"{side}: {gesture_name.upper()}")
+            
+            if len(gestures) == 2 and gestures[0] == gestures[1]:
+                # O gesto deve bater com o nome da imagem (ex: "coracao-coreano" -> coracao-coreano.png)
+                image_to_show = f"{gestures[0]}.png"
                 
-        return frame, legends
+        return frame, legends, image_to_show

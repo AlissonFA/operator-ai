@@ -80,6 +80,14 @@ function connectWS() {
                 const msg = JSON.parse(event.data);
                 if (msg.type === 'labels') {
                     updateLabels(msg.data);
+                    
+                    const gestureImage = document.getElementById('gesture-image');
+                    if (msg.image) {
+                        gestureImage.src = `/images/${msg.image}`;
+                        gestureImage.style.display = 'block';
+                    } else {
+                        gestureImage.style.display = 'none';
+                    }
                 }
             } catch (e) { console.error("JSON error:", e); }
         } else if (event.data instanceof ArrayBuffer) {

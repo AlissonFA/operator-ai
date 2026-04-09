@@ -69,6 +69,7 @@ def get():
             Div(
                 Canvas(id="output-canvas", width="640", height="480"),
                 Video(id="video", width="640", height="480", style="display:none", autoplay=True),
+                Img(id="gesture-image", src="", style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: none; width: 150px; opacity: 0.8; transition: all 0.3s ease;"),
                 style="position: relative; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid #30363d;"
             ),
             Div(id="labels-container", 
@@ -108,6 +109,7 @@ async def ws(ws):
 
                 # Process according to current mode
                 labels = []
+                image_to_show = None
                 if conn_mode == "Object Detection":
                     if detector: 
                         img, labels = processor.process_object_detection(img)
@@ -116,7 +118,7 @@ async def ws(ws):
                 elif conn_mode == "Gesture Recognition":
                     img = cv2.flip(img, 1)
                     if recognizer: 
-                        img, labels = processor.process_gesture_recognition(img)
+                        img, labels, image_to_show = processor.process_gesture_recognition(img)
                     else:
                         labels = ["Reconhecedor não carregado"]
                 elif conn_mode == "Data Collection":
@@ -134,7 +136,11 @@ async def ws(ws):
                         labels = [status_text]
                 
                 # Envia JSON com os resultados das detecções
-                await ws.send_json({"type": "labels", "data": labels})
+                payload = {"type": "labels", "data": labels}
+                if image_to_show:
+                    payload["image"] = image_to_show
+                    
+                await ws.send_json(payload)
                 
                 # Envia os bytes da imagem processada
                 _, buffer = cv2.imencode('.jpg', img, [cv2.IMWRITE_JPEG_QUALITY, 70])

@@ -98,6 +98,10 @@ function connectWS() {
                 const msg = JSON.parse(event.data);
                 if (msg.type === 'labels') {
                     updateLabels(msg.data, msg.images);
+                    if (msg.fps !== undefined) {
+                        const fpsValue = document.getElementById('fps-value');
+                        if (fpsValue) fpsValue.innerText = `FPS: ${msg.fps}`;
+                    }
                 }
             } catch (e) { console.error("JSON error:", e); }
         } else if (event.data instanceof ArrayBuffer) {

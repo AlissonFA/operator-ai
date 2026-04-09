@@ -1,7 +1,7 @@
 from fasthtml.common import *
 import cv2
 import numpy as np
-import os
+import time
 import json
 from core.models import ObjectDetector, GestureRecognizer, CustomGestureClassifier
 from core.processor import FrameProcessor
@@ -249,10 +249,41 @@ def get():
                 box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
                 cursor: pointer;
             }
+            #fps-counter {
+                position: absolute;
+                top: 15px;
+                right: 15px;
+                background: rgba(15, 23, 42, 0.7);
+                padding: 6px 12px;
+                border-radius: 12px;
+                font-size: 0.75rem;
+                font-weight: 700;
+                color: var(--primary);
+                border: 1px solid var(--glass-border);
+                backdrop-filter: blur(8px);
+                z-index: 10;
+                display: flex;
+                align-items: center;
+                gap: 6px;
+            }
+            .fps-dot {
+                width: 6px;
+                height: 6px;
+                background: #10b981;
+                border-radius: 50%;
+                box-shadow: 0 0 8px #10b981;
+                animation: pulse 2s infinite;
+            }
+            @keyframes pulse {
+                0% { opacity: 1; }
+                50% { opacity: 0.4; }
+                100% { opacity: 1; }
+            }
         """),
         H1("NLW Operator AI"),
         Div(
             Div(
+                Div(Span(cls="fps-dot"), Span("FPS: --", id="fps-value"), id="fps-counter"),
                 Canvas(id="output-canvas", width="640", height="480"),
                 Video(id="video", width="640", height="480", style="display:none", autoplay=True),
                 cls="canvas-container"
@@ -304,6 +335,7 @@ async def ws(ws):
     conn_mode = "Object Detection"
     quality = 70
     show_landmarks = True
+    last_time = time.time()
 
     while True:
         try:
@@ -318,6 +350,11 @@ async def ws(ws):
                 continue
 
             if 'bytes' in msg:
+                # Calcula FPS
+                current_time = time.time()
+                fps = 1.0 / (current_time - last_time) if current_time > last_time else 0
+                last_time = current_time
+
                 frame_bytes = msg['bytes']
                 nparr = np.frombuffer(frame_bytes, np.uint8)
                 img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
@@ -339,8 +376,8 @@ async def ws(ws):
                     else:
                         labels = ["Reconhecedor não carregado"]
                 
-                # Envia JSON com os resultados das detecções
-                payload = {"type": "labels", "data": labels}
+                # Envia JSON com os resultados das detecções e o FPS
+                payload = {"type": "labels", "data": labels, "fps": round(fps, 1)}
                 if images_to_show:
                     payload["images"] = images_to_show
                     

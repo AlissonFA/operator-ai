@@ -22,58 +22,121 @@ app, rt = fast_app(static_path='assets')
 def get():
     return Title("NLW Operator AI - FastHTML"), Body(
         Style("""
+            :root {
+                --primary: #58a6ff;
+                --secondary: #bc85ff;
+                --bg-gradient: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
+                --glass: rgba(255, 255, 255, 0.03);
+                --glass-border: rgba(255, 255, 255, 0.1);
+            }
             body { 
-                background-color: #0b0e14; 
+                background: var(--bg-gradient);
+                background-attachment: fixed;
                 color: #f0f6fc; 
-                font-family: 'Inter', sans-serif;
+                font-family: 'Outfit', 'Inter', sans-serif;
                 margin: 0;
-                padding: 20px;
+                padding: 15px;
                 display: flex;
                 flex-direction: column;
                 align-items: center;
+                min-height: 100vh;
+                overflow-x: hidden;
+            }
+            .glass-panel {
+                background: var(--glass);
+                backdrop-filter: blur(12px);
+                border: 1px solid var(--glass-border);
+                border-radius: 20px;
+                box-shadow: 0 15px 35px -12px rgba(0, 0, 0, 0.5);
             }
             h1 {
-                background: linear-gradient(90deg, #58a6ff, #bc85ff);
+                font-size: 1.8rem;
+                font-weight: 800;
+                background: linear-gradient(135deg, var(--primary), var(--secondary));
                 -webkit-background-clip: text;
                 -webkit-text-fill-color: transparent;
-                margin-bottom: 30px;
+                margin: 10px 0 20px 0;
+                letter-spacing: -0.025em;
+            }
+            .dashboard {
+                display: flex;
+                flex-direction: row;
+                align-items: flex-start;
+                gap: 20px;
+                width: 100%;
+                max-width: 1100px;
+                justify-content: center;
+            }
+            .canvas-container {
+                position: relative;
+                border-radius: 24px;
+                overflow: hidden;
+                border: 2px solid var(--glass-border);
+                line-height: 0;
+                flex-shrink: 0;
+            }
+            .sidebar {
+                display: flex;
+                flex-direction: column;
+                gap: 20px;
+                flex-grow: 1;
+                max-width: 350px;
+            }
+            .controls {
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+                padding: 20px;
             }
             select, input, button {
-                background: #21262d;
+                background: #1e293b;
                 color: white;
-                border: 1px solid #30363d;
-                padding: 8px 12px;
-                border-radius: 6px;
-                margin: 5px;
+                border: 1px solid #334155;
+                padding: 10px 15px;
+                border-radius: 10px;
+                font-size: 0.9rem;
+                transition: all 0.2s;
+                width: 100%;
+                box-sizing: border-box;
             }
             button#record-btn {
-                background: #238636;
+                background: linear-gradient(135deg, #10b981, #059669);
                 border: none;
                 cursor: pointer;
+                font-weight: 600;
             }
-            button#record-btn:hover { background: #2ea043; }
+            button#record-btn:hover { 
+                transform: translateY(-2px);
+                box-shadow: 0 8px 12px -3px rgba(16, 185, 129, 0.4);
+            }
+            #labels-container {
+                display: flex;
+                flex-direction: column;
+                gap: 15px;
+            }
+            #status-text { margin: 0; font-size: 0.8rem; opacity: 0.7; text-align: center; }
         """),
         H1("NLW Operator AI"),
-        Div(
-            Select(
-                Option("Object Detection", value="Object Detection", selected=True),
-                Option("Gesture Recognition", value="Gesture Recognition"),
-                Option("Data Collection", value="Data Collection"),
-                id="mode-select", onchange="updateState()"
-            ),
-            Input(type="text", id="label-input", value="Gesto_X", oninput="updateState()"),
-            Button("Start Recording", id="record-btn", onclick="toggleRecording()"),
-            P(id="status-text")
-        ),
         Div(
             Div(
                 Canvas(id="output-canvas", width="640", height="480"),
                 Video(id="video", width="640", height="480", style="display:none", autoplay=True),
-                style="position: relative; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid #30363d;"
+                cls="canvas-container"
             ),
-            Div(id="labels-container", 
-                style="margin-left: 20px; min-width: 200px; display: flex; flex-direction: column; gap: 10px;"),
-            style="display: flex; flex-direction: row; justify-content: center; align-items: flex-start; margin-top: 20px;"
+            Div(
+                Div(
+                    Select(
+                        Option("Object Detection", value="Object Detection", selected=True),
+                        Option("Gesture Recognition", value="Gesture Recognition"),
+                        id="mode-select", onchange="updateState()"
+                    ),
+                    P(id="status-text"),
+                    cls="controls glass-panel"
+                ),
+                Div(id="labels-container"),
+                cls="sidebar"
+            ),
+            cls="dashboard"
         ),
         Script(src="/js/app.js")
     )
@@ -84,8 +147,6 @@ async def ws(ws):
     # Removendo o accept() manual para evitar erro de protocolo ASGI.
     
     conn_mode = "Object Detection"
-    conn_label = "Gesto_X"
-    conn_is_recording = False
 
     while True:
         try:
@@ -95,8 +156,6 @@ async def ws(ws):
                 config = json.loads(msg['text'])
                 if config.get('type') == 'config':
                     conn_mode = config.get('mode', conn_mode)
-                    conn_label = config.get('label', conn_label)
-                    conn_is_recording = config.get('isRecording', conn_is_recording)
                 continue
 
             if 'bytes' in msg:
@@ -120,19 +179,6 @@ async def ws(ws):
                         img, labels, images_to_show = processor.process_gesture_recognition(img)
                     else:
                         labels = ["Reconhecedor não carregado"]
-                elif conn_mode == "Data Collection":
-                    img = cv2.flip(img, 1)
-                    if recognizer:
-                        rgb_img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-                        results = recognizer.recognize(rgb_img)
-                        if conn_is_recording and results.hand_landmarks:
-                            for landmarks in results.hand_landmarks:
-                                dataset.save_landmarks(landmarks, conn_label)
-                        if results.hand_landmarks:
-                            visualizer.draw_hand_landmarks(img, results.hand_landmarks[0])
-                        
-                        status_text = f"REC: {conn_label}" if conn_is_recording else "PAUSED"
-                        labels = [status_text]
                 
                 # Envia JSON com os resultados das detecções
                 payload = {"type": "labels", "data": labels}

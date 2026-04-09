@@ -3,9 +3,6 @@ let video = document.getElementById('video');
 let canvas = document.getElementById('output-canvas');
 let ctx = canvas.getContext('2d');
 let modeSelect = document.getElementById('mode-select');
-let labelInput = document.getElementById('label-input');
-let recordBtn = document.getElementById('record-btn');
-let isRecording = false;
 let lastFrameTime = 0;
 
 async function setupWebcam() {
@@ -20,17 +17,9 @@ function updateState() {
     if (ws && ws.readyState === WebSocket.OPEN) {
         ws.send(JSON.stringify({
             type: 'config',
-            mode: modeSelect.value,
-            label: labelInput.value,
-            isRecording: isRecording
+            mode: modeSelect.value
         }));
     }
-}
-
-function toggleRecording() {
-    isRecording = !isRecording;
-    recordBtn.innerText = isRecording ? "Stop Recording" : "Start Recording";
-    updateState();
 }
 
 function updateLabels(labels, images) {
@@ -38,31 +27,40 @@ function updateLabels(labels, images) {
     container.innerHTML = '';
     labels.forEach((label, index) => {
         const div = document.createElement('div');
-        div.style.padding = '10px 20px';
-        div.style.background = 'rgba(255, 255, 255, 0.1)';
-        div.style.backdropFilter = 'blur(10px)';
-        div.style.borderRadius = '8px';
-        div.style.borderLeft = '4px solid #00ffcc';
-        div.style.color = 'white';
-        div.style.fontWeight = 'bold';
-        div.style.fontSize = '0.9rem';
-        div.style.boxShadow = '0 4px 15px rgba(0,0,0,0.2)';
-        div.style.animation = 'fadeIn 0.3s ease-out';
+        div.className = 'glass-panel';
+        div.style.padding = '20px 30px';
         div.style.display = 'flex';
         div.style.flexDirection = 'column';
         div.style.alignItems = 'center';
+        div.style.minWidth = '180px';
+        div.style.animation = 'scaleIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards';
+        div.style.borderTop = '4px solid var(--secondary)';
 
         const textDiv = document.createElement('div');
         textDiv.innerText = label;
+        textDiv.style.fontSize = '1.1rem';
+        textDiv.style.fontWeight = '700';
+        textDiv.style.textTransform = 'uppercase';
+        textDiv.style.letterSpacing = '1px';
         div.appendChild(textDiv);
 
         if (images && images[index]) {
+            const imgContainer = document.createElement('div');
+            imgContainer.style.marginTop = '15px';
+            imgContainer.style.background = 'rgba(255,255,255,0.05)';
+            imgContainer.style.padding = '10px';
+            imgContainer.style.borderRadius = '12px';
+            imgContainer.style.display = 'flex';
+            imgContainer.style.justifyContent = 'center';
+
             const img = document.createElement('img');
             img.src = `/images/${images[index]}`;
-            img.style.width = '100px';
-            img.style.marginTop = '10px';
+            img.style.width = '80px';
+            img.style.height = '80px';
+            img.style.objectFit = 'contain';
             img.style.borderRadius = '8px';
-            div.appendChild(img);
+            imgContainer.appendChild(img);
+            div.appendChild(imgContainer);
         }
 
         container.appendChild(div);
@@ -72,9 +70,9 @@ function updateLabels(labels, images) {
 // Add animation to the CSS
 const style = document.createElement('style');
 style.innerHTML = `
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateX(20px); }
-        to { opacity: 1; transform: translateX(0); }
+    @keyframes scaleIn {
+        from { opacity: 0; transform: scale(0.9); }
+        to { opacity: 1; transform: scale(1); }
     }
 `;
 document.head.appendChild(style);

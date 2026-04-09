@@ -50,5 +50,7 @@ class FrameProcessor:
                     hand_info = results.handedness[i][0]
                     side = "Right" if hand_info.category_name == "Left" else "Left"
                     legends.append(f"{side}: {gesture_name.upper()}")
+        else:
+            legends.append("Nenhum gesto detectado")
                 
         return frame, legends, images_to_show

@@ -32,17 +32,17 @@ function updateLabels(labels, images) {
     labels.forEach((label, index) => {
         const div = document.createElement('div');
         div.className = 'glass-panel';
-        div.style.padding = '20px 30px';
+        div.style.padding = '12px 20px';
         div.style.display = 'flex';
         div.style.flexDirection = 'column';
         div.style.alignItems = 'center';
-        div.style.minWidth = '180px';
+        div.style.minWidth = '160px';
         div.style.animation = 'scaleIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards';
         div.style.borderTop = '4px solid var(--secondary)';
 
         const textDiv = document.createElement('div');
         textDiv.innerText = label;
-        textDiv.style.fontSize = '1.1rem';
+        textDiv.style.fontSize = '0.9rem';
         textDiv.style.fontWeight = '700';
         textDiv.style.textTransform = 'uppercase';
         textDiv.style.letterSpacing = '1px';
@@ -50,17 +50,17 @@ function updateLabels(labels, images) {
 
         if (images && images[index]) {
             const imgContainer = document.createElement('div');
-            imgContainer.style.marginTop = '15px';
+            imgContainer.style.marginTop = '10px';
             imgContainer.style.background = 'rgba(255,255,255,0.05)';
-            imgContainer.style.padding = '10px';
+            imgContainer.style.padding = '6px';
             imgContainer.style.borderRadius = '12px';
             imgContainer.style.display = 'flex';
             imgContainer.style.justifyContent = 'center';
 
             const img = document.createElement('img');
             img.src = `/images/${images[index]}`;
-            img.style.width = '80px';
-            img.style.height = '80px';
+            img.style.width = '60px';
+            img.style.height = '60px';
             img.style.objectFit = 'contain';
             img.style.borderRadius = '8px';
             imgContainer.appendChild(img);

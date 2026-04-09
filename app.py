@@ -112,7 +112,7 @@ def get():
             #labels-container {
                 display: flex;
                 flex-direction: column;
-                gap: 15px;
+                gap: 10px;
             }
             .control-group {
                 display: flex;
@@ -199,6 +199,56 @@ def get():
                 transform: translateX(24px) !important;
             }
             #status-text { margin: 0; font-size: 0.8rem; opacity: 0.7; text-align: center; }
+            
+            /* Custom Range Slider */
+            input[type="range"] {
+                -webkit-appearance: none;
+                background: transparent;
+                padding: 0;
+                border: none;
+                height: 20px;
+                width: 100%;
+            }
+            input[type="range"]:focus { outline: none; }
+            
+            /* Webkit (Chrome/Safari/Edge) */
+            input[type="range"]::-webkit-slider-runnable-track {
+                background: #334155;
+                height: 6px;
+                border-radius: 10px;
+            }
+            input[type="range"]::-webkit-slider-thumb {
+                -webkit-appearance: none;
+                height: 20px;
+                width: 20px;
+                background: #ffffff;
+                border: 3px solid #0f172a;
+                border-radius: 50%;
+                margin-top: -7px;
+                box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+                cursor: pointer;
+                transition: all 0.2s;
+            }
+            input[type="range"]::-webkit-slider-thumb:hover {
+                transform: scale(1.1);
+                border-color: var(--primary);
+            }
+            
+            /* Firefox */
+            input[type="range"]::-moz-range-track {
+                background: #334155;
+                height: 6px;
+                border-radius: 10px;
+            }
+            input[type="range"]::-moz-range-thumb {
+                height: 16px;
+                width: 16px;
+                background: #ffffff;
+                border: 3px solid #0f172a;
+                border-radius: 50%;
+                box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+                cursor: pointer;
+            }
         """),
         H1("NLW Operator AI"),
         Div(

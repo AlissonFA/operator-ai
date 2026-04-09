@@ -29,12 +29,21 @@ Desktop.ini
 .sesskey
 .env
 
-# Models and Data (Large binary files)
-models/*.tflite
-models/*.pkl
-models/*.task
-*.csv
-*.mp4
-*.jpg
-*.png
+# Project Assets (Include reference images)
 !assets/
+!assets/images/
+!assets/images/*
+
+# Project Models
+!models/*.tflite
+!models/*.pkl
+!models/*.task
+
+# Dataset
+!gesture_dataset.csv
+
+# Large/Unnecessary files
+*.mp4
+*.mkv
+*.avi
+

@@ -20,7 +20,7 @@ app, rt = fast_app(static_path='assets')
 
 @rt("/")
 def get():
-    return Title("NLW Operator AI - FastHTML"), Body(
+    return Title("NLW Operator AI - FastHTML"), Link(rel="icon", href="/favicon.png", type="image/png"), Body(
         Style("""
             :root {
                 --primary: #58a6ff;

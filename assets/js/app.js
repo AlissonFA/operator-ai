@@ -33,6 +33,36 @@ function toggleRecording() {
     updateState();
 }
 
+function updateLabels(labels) {
+    const container = document.getElementById('labels-container');
+    container.innerHTML = '';
+    labels.forEach(label => {
+        const div = document.createElement('div');
+        div.innerText = label;
+        div.style.padding = '10px 20px';
+        div.style.background = 'rgba(255, 255, 255, 0.1)';
+        div.style.backdropFilter = 'blur(10px)';
+        div.style.borderRadius = '8px';
+        div.style.borderLeft = '4px solid #00ffcc';
+        div.style.color = 'white';
+        div.style.fontWeight = 'bold';
+        div.style.fontSize = '0.9rem';
+        div.style.boxShadow = '0 4px 15px rgba(0,0,0,0.2)';
+        div.style.animation = 'fadeIn 0.3s ease-out';
+        container.appendChild(div);
+    });
+}
+
+// Add animation to the CSS
+const style = document.createElement('style');
+style.innerHTML = `
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateX(20px); }
+        to { opacity: 1; transform: translateX(0); }
+    }
+`;
+document.head.appendChild(style);
+
 function connectWS() {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     ws = new WebSocket(`${protocol}//${window.location.host}/ws`);
@@ -45,7 +75,14 @@ function connectWS() {
     };
 
     ws.onmessage = async (event) => {
-        if (event.data instanceof ArrayBuffer) {
+        if (typeof event.data === 'string') {
+            try {
+                const msg = JSON.parse(event.data);
+                if (msg.type === 'labels') {
+                    updateLabels(msg.data);
+                }
+            } catch (e) { console.error("JSON error:", e); }
+        } else if (event.data instanceof ArrayBuffer) {
             const blob = new Blob([event.data], { type: 'image/jpeg' });
             const url = URL.createObjectURL(blob);
             const img = new Image();

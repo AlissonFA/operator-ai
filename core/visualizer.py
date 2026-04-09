@@ -5,7 +5,7 @@ class Visualizer:
     
     @staticmethod
     def draw_objects(image, detection_result):
-        """Desenha caixas delimitadoras (bounding boxes) e rótulos para detecção de objetos."""
+        """Desenha caixas delimitadoras (bounding boxes) nos frames."""
         for detection in detection_result.detections:
             bbox = detection.bounding_box
             start_point = bbox.origin_x, bbox.origin_y
@@ -14,14 +14,6 @@ class Visualizer:
             # Desenha o retângulo da caixa delimitadora
             cv2.rectangle(image, start_point, end_point, (0, 255, 0), 3)
 
-            # Prepara o texto com o nome da categoria e a pontuação de confiança
-            category = detection.categories[0]
-            result_text = f"{category.category_name} ({round(category.score, 2)})"
-            text_location = (bbox.origin_x, bbox.origin_y - 10)
-            
-            # Desenha o texto do rótulo acima da caixa
-            cv2.putText(image, result_text, text_location, cv2.FONT_HERSHEY_SIMPLEX,
-                        1, (0, 0, 255), 2, cv2.LINE_AA)
         return image
 
     @staticmethod

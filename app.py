@@ -21,6 +21,38 @@ app, rt = fast_app(static_path='assets')
 @rt("/")
 def get():
     return Title("NLW Operator AI - FastHTML"), Body(
+        Style("""
+            body { 
+                background-color: #0b0e14; 
+                color: #f0f6fc; 
+                font-family: 'Inter', sans-serif;
+                margin: 0;
+                padding: 20px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+            h1 {
+                background: linear-gradient(90deg, #58a6ff, #bc85ff);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                margin-bottom: 30px;
+            }
+            select, input, button {
+                background: #21262d;
+                color: white;
+                border: 1px solid #30363d;
+                padding: 8px 12px;
+                border-radius: 6px;
+                margin: 5px;
+            }
+            button#record-btn {
+                background: #238636;
+                border: none;
+                cursor: pointer;
+            }
+            button#record-btn:hover { background: #2ea043; }
+        """),
         H1("NLW Operator AI"),
         Div(
             Select(
@@ -34,15 +66,22 @@ def get():
             P(id="status-text")
         ),
         Div(
-            Canvas(id="output-canvas", width="640", height="480"),
-            Video(id="video", width="640", height="480", style="display:none", autoplay=True),
+            Div(
+                Canvas(id="output-canvas", width="640", height="480"),
+                Video(id="video", width="640", height="480", style="display:none", autoplay=True),
+                style="position: relative; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid #30363d;"
+            ),
+            Div(id="labels-container", 
+                style="margin-left: 20px; min-width: 200px; display: flex; flex-direction: column; gap: 10px;"),
+            style="display: flex; flex-direction: row; justify-content: center; align-items: flex-start; margin-top: 20px;"
         ),
         Script(src="/js/app.js")
     )
 
 @app.ws('/ws')
 async def ws(ws):
-    await ws.accept()
+    # Com o FastHTML, o accept() é automático ou gerenciado pelo decorator.
+    # Removendo o accept() manual para evitar erro de protocolo ASGI.
     
     conn_mode = "Object Detection"
     conn_label = "Gesto_X"
@@ -68,11 +107,18 @@ async def ws(ws):
                 if img is None: continue
 
                 # Process according to current mode
+                labels = []
                 if conn_mode == "Object Detection":
-                    if detector: img = processor.process_object_detection(img)
+                    if detector: 
+                        img, labels = processor.process_object_detection(img)
+                    else:
+                        labels = ["Detector não carregado"]
                 elif conn_mode == "Gesture Recognition":
                     img = cv2.flip(img, 1)
-                    if recognizer: img = processor.process_gesture_recognition(img)
+                    if recognizer: 
+                        img, labels = processor.process_gesture_recognition(img)
+                    else:
+                        labels = ["Reconhecedor não carregado"]
                 elif conn_mode == "Data Collection":
                     img = cv2.flip(img, 1)
                     if recognizer:
@@ -83,14 +129,19 @@ async def ws(ws):
                                 dataset.save_landmarks(landmarks, conn_label)
                         if results.hand_landmarks:
                             visualizer.draw_hand_landmarks(img, results.hand_landmarks[0])
+                        
                         status_text = f"REC: {conn_label}" if conn_is_recording else "PAUSED"
-                        color = (0, 0, 255) if conn_is_recording else (255, 0, 0)
-                        visualizer.draw_status(img, status_text, color=color)
-
+                        labels = [status_text]
+                
+                # Envia JSON com os resultados das detecções
+                await ws.send_json({"type": "labels", "data": labels})
+                
+                # Envia os bytes da imagem processada
                 _, buffer = cv2.imencode('.jpg', img, [cv2.IMWRITE_JPEG_QUALITY, 70])
                 await ws.send_bytes(buffer.tobytes())
 
         except Exception as e:
+            # print(f"WS Error: {e}")
             break
 
 if __name__ == "__main__":

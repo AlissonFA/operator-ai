@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 import joblib
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
@@ -20,10 +21,16 @@ class GestureTrainer:
         print(f"Loading dataset from {self.dataset_path}...")
         df = pd.read_csv(self.dataset_path, header=None)
         
-        # Separa os recursos (X) dos rótulos (y)
-        X = df.iloc[:, :-1].values
-        y = df.iloc[:, -1].values
+        # Separa os recursos (X) dos rótulos (y) - Convertendo explicitamente para NumPy
+        X = df.iloc[:, :-1].to_numpy(dtype='float32')
+        y = df.iloc[:, -1].to_numpy()
         
+        # Verifica se há pelo menos 2 classes para permitir a divisão estratificada
+        unique_classes = np.unique(y)
+        if len(unique_classes) < 2:
+            print(f"Error: You need at least 2 different gesture labels to train. Found: {unique_classes}")
+            return False
+
         # Divide os dados em treino (80%) e teste (20%)
         X_train, X_test, y_train, y_test = train_test_split(
             X, y, test_size=0.2, random_state=42, stratify=y

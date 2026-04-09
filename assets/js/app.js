@@ -33,12 +33,11 @@ function toggleRecording() {
     updateState();
 }
 
-function updateLabels(labels) {
+function updateLabels(labels, images) {
     const container = document.getElementById('labels-container');
     container.innerHTML = '';
-    labels.forEach(label => {
+    labels.forEach((label, index) => {
         const div = document.createElement('div');
-        div.innerText = label;
         div.style.padding = '10px 20px';
         div.style.background = 'rgba(255, 255, 255, 0.1)';
         div.style.backdropFilter = 'blur(10px)';
@@ -49,6 +48,23 @@ function updateLabels(labels) {
         div.style.fontSize = '0.9rem';
         div.style.boxShadow = '0 4px 15px rgba(0,0,0,0.2)';
         div.style.animation = 'fadeIn 0.3s ease-out';
+        div.style.display = 'flex';
+        div.style.flexDirection = 'column';
+        div.style.alignItems = 'center';
+
+        const textDiv = document.createElement('div');
+        textDiv.innerText = label;
+        div.appendChild(textDiv);
+
+        if (images && images[index]) {
+            const img = document.createElement('img');
+            img.src = `/images/${images[index]}`;
+            img.style.width = '100px';
+            img.style.marginTop = '10px';
+            img.style.borderRadius = '8px';
+            div.appendChild(img);
+        }
+
         container.appendChild(div);
     });
 }
@@ -79,15 +95,7 @@ function connectWS() {
             try {
                 const msg = JSON.parse(event.data);
                 if (msg.type === 'labels') {
-                    updateLabels(msg.data);
-                    
-                    const gestureImage = document.getElementById('gesture-image');
-                    if (msg.image) {
-                        gestureImage.src = `/images/${msg.image}`;
-                        gestureImage.style.display = 'block';
-                    } else {
-                        gestureImage.style.display = 'none';
-                    }
+                    updateLabels(msg.data, msg.images);
                 }
             } catch (e) { console.error("JSON error:", e); }
         } else if (event.data instanceof ArrayBuffer) {

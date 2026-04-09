@@ -145,4 +145,12 @@ function sendFrame(time) {
 if (qualitySlider) qualitySlider.addEventListener('input', updateState);
 if (landmarksCheckbox) landmarksCheckbox.addEventListener('change', updateState);
 
+const fpsCheckbox = document.getElementById('fps-checkbox');
+const fpsCounter = document.getElementById('fps-counter');
+if (fpsCheckbox && fpsCounter) {
+    fpsCheckbox.addEventListener('change', () => {
+        fpsCounter.style.display = fpsCheckbox.checked ? 'flex' : 'none';
+    });
+}
+
 setupWebcam().then(connectWS);

@@ -35,7 +35,7 @@ def get():
                 color: #f0f6fc; 
                 font-family: 'Outfit', 'Inter', sans-serif;
                 margin: 0;
-                padding: 15px;
+                padding: 20px;
                 display: flex;
                 flex-direction: column;
                 align-items: center;
@@ -62,10 +62,12 @@ def get():
                 display: flex;
                 flex-direction: row;
                 align-items: flex-start;
-                gap: 20px;
+                gap: 30px;
                 width: 100%;
-                max-width: 1100px;
+                max-width: 1600px;
                 justify-content: center;
+                padding: 0 10px;
+                box-sizing: border-box;
             }
             .canvas-container {
                 position: relative;
@@ -73,14 +75,28 @@ def get():
                 overflow: hidden;
                 border: 2px solid var(--glass-border);
                 line-height: 0;
-                flex-shrink: 0;
+                flex: 2;
+                max-width: 850px;
+                max-height: 70vh;
+                background: #000;
+                box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            #output-canvas {
+                width: 100%;
+                height: 100%;
+                object-fit: contain;
+                display: block;
             }
             .sidebar {
                 display: flex;
                 flex-direction: column;
                 gap: 20px;
-                flex-grow: 1;
-                max-width: 350px;
+                flex: 1;
+                min-width: 320px;
+                max-width: 450px;
             }
             .controls {
                 display: flex;
@@ -279,6 +295,21 @@ def get():
                 50% { opacity: 0.4; }
                 100% { opacity: 1; }
             }
+            
+            @media (max-width: 1100px) {
+                .dashboard {
+                    flex-direction: column;
+                    align-items: center;
+                }
+                .canvas-container {
+                    width: 100%;
+                    max-width: 800px;
+                }
+                .sidebar {
+                    width: 100%;
+                    max-width: 800px;
+                }
+            }
         """),
         H1("NLW Operator AI"),
         Div(
@@ -309,6 +340,18 @@ def get():
                             Span("Mostrar Landmarks", cls="control-label", style="margin:0"),
                             Label(
                                 Input(type="checkbox", id="landmarks-checkbox", checked="checked"),
+                                Span(cls="slider-toggle"),
+                                cls="switch"
+                            ),
+                            cls="checkbox-group"
+                        ),
+                        cls="control-group"
+                    ),
+                    Div(
+                        Div(
+                            Span("Mostrar FPS", cls="control-label", style="margin:0"),
+                            Label(
+                                Input(type="checkbox", id="fps-checkbox", checked="checked"),
                                 Span(cls="slider-toggle"),
                                 cls="switch"
                             ),
